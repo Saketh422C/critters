@@ -1,10 +1,10 @@
 /* CRITTERS Critter.java
  * ECE422C Project 3 submission by
  * Replace <...> with your actual data.
- * <Student Name>
- * <Student EID>
- * Slip days used: <0>
- * Fall 2024
+ * <Saketh Gangadaranellore>
+ * <srg3779>
+ * Slip days used: <1>
+ * Spring 2025
  */
 package assignment3;
 
@@ -69,6 +69,14 @@ public abstract class Critter {
 	 * @throws InvalidCritterException
 	 */
 	public static void makeCritter(String critter_class_name) throws InvalidCritterException {
+		try {
+			Class<?> critterClass = Class.forName(myPackage + "." + critter_class_name);
+			Critter critter = (Critter) critterClass.getDeclaredConstructor().newInstance();
+			critter.energy = Params.start_energy;
+			population.add(critter);
+		} catch (Exception e) {
+			throw new InvalidCritterException(critter_class_name);
+		}
 	}
 	
 	/**
@@ -163,10 +171,57 @@ public abstract class Critter {
 	 * Clear the world of all critters, dead and alive
 	 */
 	public static void clearWorld() {
+		population.clear();
+		babies.clear();
 	}
 	
 	public static void worldTimeStep() {
+		for(int i = 0; i < population.size(); i++){
+			population.get(i).doTimeStep();
+		}
+		population.addAll(babies);
+		babies.clear();
 	}
-	
+
+	/**
+	 * Handles who wins fights between Critters
+	 * @param a First Critter Fighting
+	 * @param b Second Critter Fighting
+	 */
+	public static void startFight(Critter a, Critter b){
+		boolean aFight = a.fight(b.toString());
+		boolean bFight = b.fight(a.toString());
+
+		if(a.energy <= 0 || b.energy <= 0){
+			return;
+		}
+		int aDiceRoll;
+		if(aFight){
+			aDiceRoll = getRandomInt(a.energy);
+		}
+		else{
+			aDiceRoll = 0;
+		}
+		int bDiceRoll;
+		if(bFight){
+			bDiceRoll = getRandomInt(b.energy);
+		}
+		else{
+			bDiceRoll = 0;
+		}
+
+		Critter winner;
+		Critter loser;
+		if(aDiceRoll >= bDiceRoll){
+			winner = a;
+			loser = b;
+		}
+		else{
+			winner = b;
+			loser = a;
+		}
+		winner.energy += loser.energy / 2;
+		loser.energy = 0;
+	}
 	public static void displayWorld() {}
 }
